@@ -1,0 +1,90 @@
+name: Deploy backend
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "backend/**"
+      - "deploy/**"
+      - ".github/workflows/deploy-backend.yml"
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: "Existing image tag (commit SHA) to deploy. Leave empty to build the current commit. Use this to roll back."
+        required: false
+        default: ""
+
+concurrency:
+  group: deploy-backend
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      APP_DIR: /opt/${{ github.event.repository.name }}
+      HETZNER_HOST: ${{ secrets.HETZNER_HOST }}
+      HETZNER_USER: ${{ secrets.HETZNER_USER }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Compute image name and tag
+        id: image
+        run: |
+          echo "name=ghcr.io/${GITHUB_REPOSITORY,,}/backend" >> "$GITHUB_OUTPUT"
+          echo "tag=${{ inputs.image_tag || github.sha }}" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/setup-buildx-action@v3
+        if: inputs.image_tag == ''
+
+      - uses: docker/login-action@v3
+        if: inputs.image_tag == ''
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push image
+        if: inputs.image_tag == ''
+        uses: docker/build-push-action@v6
+        with:
+          context: backend
+          push: true
+          tags: ${{ steps.image.outputs.name }}:${{ steps.image.outputs.tag }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Configure SSH
+        env:
+          SSH_KEY: ${{ secrets.HETZNER_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.HETZNER_KNOWN_HOSTS }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+
+      - name: Copy deploy files
+        run: scp -i ~/.ssh/deploy_key -r deploy/. "$HETZNER_USER@$HETZNER_HOST:$APP_DIR/"
+
+      - name: Let the server pull from GHCR
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          printf '%s' "$GHCR_TOKEN" | ssh -i ~/.ssh/deploy_key "$HETZNER_USER@$HETZNER_HOST" \
+            "docker login ghcr.io -u '${{ github.actor }}' --password-stdin"
+
+      - name: Deploy, health check, auto-rollback
+        run: |
+          ssh -i ~/.ssh/deploy_key "$HETZNER_USER@$HETZNER_HOST" \
+            "APP_DIR='$APP_DIR' IMAGE='${{ steps.image.outputs.name }}:${{ steps.image.outputs.tag }}' bash -s" \
+            < deploy/remote-deploy.sh
+
+      - name: Remove registry credentials from the server
+        if: always()
+        run: ssh -i ~/.ssh/deploy_key "$HETZNER_USER@$HETZNER_HOST" "docker logout ghcr.io" || true

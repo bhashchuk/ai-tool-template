@@ -1,0 +1,37 @@
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+*.egg-info/
+build/
+
+# Node
+node_modules/
+.next/
+out/
+*.tsbuildinfo
+next-env.d.ts
+
+# Supabase local
+supabase/.temp/
+supabase/.branches/
+
+# Claude Code personal overrides
+CLAUDE.local.md
+.claude/settings.local.json
+
+# Eval outputs
+evals/results/
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/

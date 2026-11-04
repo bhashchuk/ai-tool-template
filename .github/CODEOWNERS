@@ -1,0 +1,10 @@
+# Replace @OWNER with your GitHub handle (or a team).
+# Branch protection requires a code owner review, so these paths always reach you.
+
+*                          @bhashchuk
+/supabase/migrations/      @bhashchuk
+/backend/app/prompts/      @bhashchuk
+/backend/app/auth.py       @bhashchuk
+/deploy/                   @bhashchuk
+/.github/                  @bhashchuk
+/.claude/                  @bhashchuk

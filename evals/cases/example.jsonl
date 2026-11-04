@@ -1,0 +1,2 @@
+{"id": "summarize-paris", "prompt": "example", "input": "The Eiffel Tower is a wrought-iron lattice tower in Paris, France. It was completed in 1889 and is one of the most visited monuments in the world.", "must_contain": ["Paris"], "must_not_contain": ["As an AI"]}
+{"id": "summarize-short", "prompt": "example", "input": "Our Q3 revenue grew 12 percent, driven mostly by the new enterprise plan.", "must_contain": ["12"], "must_not_contain": ["As an AI"]}

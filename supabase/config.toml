@@ -1,0 +1,7 @@
+# Minimal config so the Supabase CLI recognizes this project.
+# Set project_id to the tool name, and major_version to your hosted project's Postgres version.
+# Run `supabase init --force` locally if you need to customize local services.
+project_id = "CHANGE_ME"
+
+[db]
+major_version = 17
