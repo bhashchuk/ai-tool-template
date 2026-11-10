@@ -1,7 +1,7 @@
 ---
 description: Open a draft PR using the repo template
 argument-hint: "[ticket id]"
-allowed-tools: Bash(git status:*), Bash(git diff:*), Bash(git log:*), Bash(git push -u origin HEAD), Bash(gh pr create:*)
+allowed-tools: Bash(git status:*), Bash(git diff:*), Bash(git log:*), Bash(git push -u origin HEAD), Bash(gh pr create:*), Write(.git/PR_BODY.md)
 ---
 
 Open a draft pull request for the current branch. Ticket: $ARGUMENTS
@@ -15,6 +15,7 @@ Open a draft pull request for the current branch. Ticket: $ARGUMENTS
    - **Risk**: exactly one `Level:` line (`Low`, `Medium` or `High`) and a one-line reason. Auth, payments, permissions, migrations, public API and infra are High. Business logic and new endpoints are Medium. A prompt, model or retrieval change is at least Medium.
    - **Verification**: only the tests that cover the new behavior and manual checks you actually performed. Write "not run" for anything you did not do. Do not list lint, typecheck or the general test suite; CI reports those.
    - **Rollout / rollback**: only if there is a flag, migration or non-trivial rollback. Otherwise delete the section.
-   - **Authorship**: `AI-assisted: yes`.
-4. Run `git push -u origin HEAD`, then `gh pr create --draft --title "<short imperative title>" --body "$(cat <<'EOF' ... EOF)"` with the filled body.
-5. Tell the user the PR is a draft: they must read the full diff, then mark it ready for review, which triggers the AI reviewer.
+   - **Authorship**: `AI-assisted: yes`. Leave "I read the full diff" unticked; only the human ticks it.
+4. Write the filled body to `.git/PR_BODY.md` with the Write tool. Never put the body on the command line.
+5. Run `git push -u origin HEAD`, then `gh pr create --draft --title '<short imperative title>' --body-file .git/PR_BODY.md`. Keep the title free of single quotes.
+6. Tell the user the PR is a draft: they must read the full diff, tick "I read the full diff", then mark it ready for review, which triggers the AI reviewer.

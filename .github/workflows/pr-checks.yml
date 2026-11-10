@@ -2,7 +2,7 @@ name: PR checks
 
 on:
   pull_request:
-    types: [opened, edited, synchronize, reopened, ready_for_review]
+    types: [opened, edited, synchronize, reopened, ready_for_review, converted_to_draft]
 
 permissions:
   contents: read
@@ -14,55 +14,26 @@ jobs:
     name: pr-template
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github/scripts
+          persist-credentials: false
       - uses: actions/github-script@v9
         with:
           script: |
+            const risk = require(`${process.env.GITHUB_WORKSPACE}/.github/scripts/pr-risk.cjs`);
             const pr = context.payload.pull_request;
-            const body = pr.body || '';
-
-            // 1. The PR must declare a risk level.
-            const match = body.match(/^Level:[ \t]*(Low|Medium|High)\b/im);
-            if (!match) {
-              core.setFailed('PR body needs a line "Level: Low", "Level: Medium" or "Level: High" under Risk.');
-              return;
-            }
-            const level = match[1].toLowerCase();
-            const rank = { low: 0, medium: 1, high: 2 };
-
-            // 2. The declared level cannot be lower than the paths touched.
             const files = await github.paginate(github.rest.pulls.listFiles, {
               ...context.repo, pull_number: pr.number, per_page: 100,
             });
-            const touchesHigh = files.some(f =>
-              f.filename.startsWith('supabase/migrations/') ||
-              f.filename.startsWith('deploy/') ||
-              f.filename.startsWith('.github/workflows/') ||
-              f.filename === 'backend/app/auth.py');
-            const touchesMedium = files.some(f =>
-              f.filename.startsWith('backend/app/prompts/') ||
-              f.filename === 'backend/app/llm.py');
-            const floor = touchesHigh ? 2 : touchesMedium ? 1 : 0;
-            const names = ['Low', 'Medium', 'High'];
-            if (rank[level] < floor) {
-              core.setFailed(
-                `This PR touches ${touchesHigh ? 'migrations, deploy, workflows or auth' : 'prompts or LLM code'}, ` +
-                `so Risk must be at least ${names[floor]} (declared: ${names[rank[level]]}).`);
+
+            const { level, error } = risk.evaluate(pr, files);
+            if (error) {
+              core.setFailed(error);
               return;
             }
+            await risk.syncRiskLabel({ github, context, pr, level });
 
-            // 3. Keep exactly one risk label on the PR.
-            const keep = `risk:${level}`;
-            const current = (pr.labels || []).map(l => l.name);
-            for (const name of current) {
-              if (name.startsWith('risk:') && name !== keep) {
-                await github.rest.issues.removeLabel({ ...context.repo, issue_number: pr.number, name });
-              }
-            }
-            if (!current.includes(keep)) {
-              await github.rest.issues.addLabels({ ...context.repo, issue_number: pr.number, labels: [keep] });
-            }
-
-            // 4. Warn (not fail) on large PRs. Lockfiles do not count.
             const lock = /(package-lock\.json|pnpm-lock\.yaml|yarn\.lock|uv\.lock|poetry\.lock)$/;
             const changed = files
               .filter(f => !lock.test(f.filename))
