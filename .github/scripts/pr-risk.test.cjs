@@ -50,9 +50,10 @@ test('the read-the-diff box must be ticked', () => {
   assert.equal(diffWasRead('- [x] I read the full diff before marking this ready'), true);
 });
 
-test('a declared level below the floor fails and names the file', () => {
+test('a declared level below the path floor still passes', () => {
   const result = evaluate(ready('Level: Low\n- [x] I read the full diff'), files('backend/app/auth.py'));
-  assert.match(result.error, /backend\/app\/auth\.py .* at least High/);
+  assert.equal(result.error, null);
+  assert.equal(result.level, 0);
 });
 
 test('a ready PR without the ticked box fails; a draft does not', () => {

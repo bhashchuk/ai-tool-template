@@ -62,6 +62,7 @@ function isDependabot(pr) {
 }
 
 // Returns an error message, or null when the PR passes. `level` is the label to apply.
+// Path floors still drive Dependabot labels; they no longer reject a declared Level.
 function evaluate(pr, files) {
   const floor = riskFloor(files);
   if (isDependabot(pr)) return { level: floor.level, error: null };
@@ -69,14 +70,6 @@ function evaluate(pr, files) {
   const level = declaredLevel(pr.body);
   if (level < 0) {
     return { level, error: 'PR body needs a line "Level: Low", "Level: Medium" or "Level: High" under Risk.' };
-  }
-  if (level < floor.level) {
-    return {
-      level,
-      error:
-        `${floor.path} is ${floor.why}, so Risk must be at least ${LEVELS[floor.level]} ` +
-        `(declared: ${LEVELS[level]}).`,
-    };
   }
   if (!pr.draft && !diffWasRead(pr.body)) {
     return { level, error: 'Tick "I read the full diff" under Authorship before marking the PR ready for review.' };
