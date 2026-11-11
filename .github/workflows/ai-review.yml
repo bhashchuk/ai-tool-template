@@ -36,7 +36,7 @@ jobs:
           fi
 
       # Base branch, not the PR head.
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 1
           persist-credentials: false
