@@ -44,6 +44,6 @@ Keep this short and current. Update it in the same PR that changes any of the be
 
 ## Monitoring
 
-- Health: `https://<domain>/health`
-- Logs: `ssh <host>` then `cd /opt/<repo> && docker compose logs -f backend`
+- Health: `http://<host>:8000/health`
+- Logs: `ssh <host>` then `cd /opt/<repo> && IMAGE=$(cat .current_image) docker compose logs -f backend`
 - LLM calls log prompt name, model, token counts and latency (`llm_call` log lines).

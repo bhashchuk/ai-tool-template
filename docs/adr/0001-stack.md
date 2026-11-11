@@ -7,7 +7,7 @@ Status: accepted
 Each tool is owned end to end by one engineer. A shared stack lets anyone read, review and operate any tool, and lets Claude Code work with the same conventions everywhere.
 
 ## Decision
-- Backend: Python + FastAPI in Docker on Hetzner, behind Caddy for TLS.
+- Backend: Python + FastAPI in Docker on Hetzner (published on port 8000).
 - Frontend: Next.js on Vercel.
 - Data and auth: Supabase, schema changed only through migrations.
 - Prompts as files, LLM behavior covered by evals in CI.
