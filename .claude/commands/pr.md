@@ -1,14 +1,20 @@
 ---
 description: Open a draft PR using the repo template
 argument-hint: "[ticket id]"
-allowed-tools: Bash(git status:*), Bash(git diff:*), Bash(git log:*), Bash(git push -u origin HEAD), Bash(gh pr create:*), Write(.git/PR_BODY.md)
+allowed-tools: Bash(git status:*), Bash(git diff:*), Bash(git log:*), Bash(git add:*), Bash(git commit:*), Bash(git push -u origin HEAD), Bash(gh pr create:*), Write(.git/PR_BODY.md)
 ---
 
 Open a draft pull request for the current branch. Ticket: $ARGUMENTS
 
-1. Run `git status`, `git log main..HEAD --oneline` and `git diff main...HEAD`. If the current branch is `main`, or there are uncommitted changes, stop and tell the user.
-2. Read `.github/PULL_REQUEST_TEMPLATE.md` and follow the instructions in its comments.
-3. Fill every section from the actual diff:
+1. Run `git status`, `git log main..HEAD --oneline` and `git diff main...HEAD`. If the current branch is `main`, stop and tell the user.
+2. If there are uncommitted changes (staged, unstaged, or untracked), commit them first before opening the PR:
+   - Run `git status`, `git diff` (staged + unstaged), and `git log -5 --oneline` in parallel.
+   - Do not commit secrets (`.env`, credentials, keys). Warn and leave those out.
+   - Stage the relevant files, then commit with a concise 1–2 sentence message focused on why (HEREDOC). Follow the repo's recent commit style.
+   - If the commit fails because of a hook, fix the issue and create a **new** commit (do not amend).
+   - Re-run `git status` and confirm the working tree is clean, then refresh `git log main..HEAD --oneline` and `git diff main...HEAD`.
+3. Read `.github/PULL_REQUEST_TEMPLATE.md` and follow the instructions in its comments.
+4. Fill every section from the actual diff (including anything just committed):
    - **What**: 1-2 sentences. No file lists, no restating the diff.
    - **Why**: the reason for the change. Ticket from the argument, else from the branch name, else "none".
    - **Review focus**: the specific files or logic a human must read closely, anything you are unsure about, and what is deliberately left out.
@@ -16,6 +22,6 @@ Open a draft pull request for the current branch. Ticket: $ARGUMENTS
    - **Verification**: only the tests that cover the new behavior and manual checks you actually performed. Write "not run" for anything you did not do. Do not list lint, typecheck or the general test suite; CI reports those.
    - **Rollout / rollback**: only if there is a flag, migration or non-trivial rollback. Otherwise delete the section.
    - **Authorship**: `AI-assisted: yes`. Leave "I read the full diff" unticked; only the human ticks it.
-4. Write the filled body to `.git/PR_BODY.md` with the Write tool. Never put the body on the command line.
-5. Run `git push -u origin HEAD`, then `gh pr create --draft --title '<short imperative title>' --body-file .git/PR_BODY.md`. Keep the title free of single quotes.
-6. Tell the user the PR is a draft: they must read the full diff, tick "I read the full diff", then mark it ready for review, which triggers the AI reviewer.
+5. Write the filled body to `.git/PR_BODY.md` with the Write tool. Never put the body on the command line.
+6. Run `git push -u origin HEAD`, then `gh pr create --draft --title '<short imperative title>' --body-file .git/PR_BODY.md`. Keep the title free of single quotes.
+7. Tell the user the PR is a draft: they must read the full diff, tick "I read the full diff", then mark it ready for review, which triggers the AI reviewer.
