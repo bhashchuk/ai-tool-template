@@ -1,26 +1,11 @@
+# Production stack. The image is built in CI and pulled from GHCR.
+# Local development uses the backend Dockerfile / uvicorn directly.
 services:
   backend:
     image: ${IMAGE:?IMAGE must be set}
     restart: unless-stopped
     env_file: .env
-    expose:
-      - "8000"
-
-  caddy:
-    image: caddy:2
-    restart: unless-stopped
-    depends_on:
-      - backend
+    # Published for the frontend (Vercel rewrite or NEXT_PUBLIC_API_URL) to
+    # reach the API at http://HOST:8000. No reverse proxy in this template.
     ports:
-      - "80:80"
-      - "443:443"
-    environment:
-      - DOMAIN=${DOMAIN:?DOMAIN must be set in .env}
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      - caddy_data:/data
-      - caddy_config:/config
-
-volumes:
-  caddy_data:
-  caddy_config:
+      - "8000:8000"
