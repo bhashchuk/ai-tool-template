@@ -6,6 +6,11 @@ set -euo pipefail
 cd "$APP_DIR"
 PREV="$(cat .current_image 2>/dev/null || true)"
 
+if [ ! -f .env ]; then
+  echo "ERROR: $APP_DIR/.env is missing - create it from backend/.env.example before deploying." >&2
+  exit 1
+fi
+
 export IMAGE
 docker compose pull backend
 docker compose up -d --remove-orphans

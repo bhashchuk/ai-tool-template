@@ -4,7 +4,7 @@
 
 ## Stack
 
-- `backend/`: Python 3.12, FastAPI. Runs on Hetzner (Docker + Caddy).
+- `backend/`: Python 3.12, FastAPI. Runs on Hetzner (Docker, port 8000).
 - `frontend/`: Next.js (App Router, TypeScript). Runs on Vercel.
 - `supabase/`: Postgres, auth, storage. Schema changes only through migrations.
 - `evals/`: fixed test cases for LLM behavior, run in CI.
