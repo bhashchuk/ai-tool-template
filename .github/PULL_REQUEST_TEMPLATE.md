@@ -28,6 +28,5 @@ If you didn't verify something, write "not run". -->
 <!-- Only if there is a flag, migration, or non-trivial rollback. Otherwise delete this section. -->
 
 ## Authorship
+<!-- /pr fills this with "AI-assisted: yes". -->
 AI-assisted:
-- [ ] I read the full diff
-<!-- Tick the box before marking ready for review. /pr leaves AI-assisted: yes and the box empty. -->

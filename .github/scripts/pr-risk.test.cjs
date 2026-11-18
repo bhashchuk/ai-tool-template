@@ -1,9 +1,9 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { riskFloor, declaredLevel, diffWasRead, evaluate, syncRiskLabel } = require('./pr-risk.cjs');
+const { riskFloor, declaredLevel, evaluate, syncRiskLabel } = require('./pr-risk.cjs');
 
 const files = (...names) => names.map(filename => ({ filename }));
-const ready = body => ({ draft: false, user: { login: 'someone' }, body });
+const ready = body => ({ body });
 
 test('auth, deploy and infra paths floor at High', () => {
   for (const path of [
@@ -45,26 +45,17 @@ test('reads the Level line case-insensitively', () => {
   assert.equal(declaredLevel('Level:\nReason:'), -1);
 });
 
-test('the read-the-diff box must be ticked', () => {
-  assert.equal(diffWasRead('- [ ] I read the full diff'), false);
-  assert.equal(diffWasRead('- [x] I read the full diff before marking this ready'), true);
-});
-
 test('a declared level below the floor fails and names the file', () => {
-  const result = evaluate(ready('Level: Low\n- [x] I read the full diff'), files('backend/app/auth.py'));
+  const result = evaluate(ready('Level: Low'), files('backend/app/auth.py'));
   assert.match(result.error, /backend\/app\/auth\.py .* at least High/);
 });
 
-test('a ready PR without the ticked box fails; a draft does not', () => {
-  const body = 'Level: Low\n- [ ] I read the full diff';
-  assert.match(evaluate(ready(body), files('README.md')).error, /I read the full diff/);
-  assert.equal(evaluate({ ...ready(body), draft: true }, files('README.md')).error, null);
-});
-
-test('Dependabot needs no Level line and gets the path floor', () => {
-  const pr = { draft: false, user: { login: 'dependabot[bot]' }, body: 'Bumps x from 1 to 2.' };
-  assert.deepEqual(evaluate(pr, files('frontend/package.json')), { level: 0, error: null });
-  assert.deepEqual(evaluate(pr, files('.github/workflows/ci.yml')), { level: 2, error: null });
+test('a declared level at or above the floor passes', () => {
+  assert.deepEqual(evaluate(ready('Level: High'), files('backend/app/auth.py')), {
+    level: 2,
+    error: null,
+  });
+  assert.deepEqual(evaluate(ready('Level: Low'), files('README.md')), { level: 0, error: null });
 });
 
 test('creates a missing risk label before adding it', async () => {

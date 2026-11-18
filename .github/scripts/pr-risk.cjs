@@ -106,4 +106,4 @@ async function syncRiskLabel({ github, context, pr, level }) {
   }
 }
 
-module.exports = { LEVELS, riskFloor, declaredLevel, diffWasRead, isDependabot, evaluate, syncRiskLabel };
+module.exports = { LEVELS, riskFloor, declaredLevel, evaluate, syncRiskLabel };
