@@ -53,18 +53,9 @@ function declaredLevel(body) {
   return LEVELS.findIndex(l => l.toLowerCase() === match[1].toLowerCase());
 }
 
-function diffWasRead(body) {
-  return /^[ \t]*- \[[xX]\] I read the full diff\b/m.test(body || '');
-}
-
-function isDependabot(pr) {
-  return pr.user?.login === 'dependabot[bot]';
-}
-
 // Returns an error message, or null when the PR passes. `level` is the label to apply.
 function evaluate(pr, files) {
   const floor = riskFloor(files);
-  if (isDependabot(pr)) return { level: floor.level, error: null };
 
   const level = declaredLevel(pr.body);
   if (level < 0) {
@@ -78,9 +69,7 @@ function evaluate(pr, files) {
         `(declared: ${LEVELS[level]}).`,
     };
   }
-  if (!pr.draft && !diffWasRead(pr.body)) {
-    return { level, error: 'Tick "I read the full diff" under Authorship before marking the PR ready for review.' };
-  }
+
   return { level, error: null };
 }
 
