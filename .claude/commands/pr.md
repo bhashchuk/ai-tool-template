@@ -6,6 +6,12 @@ allowed-tools: Bash(git status:*), Bash(git diff:*), Bash(git log:*), Bash(git a
 
 Open a draft pull request for the current branch. Ticket: $ARGUMENTS
 
+**Keep each PR small and focused — aim for roughly 400 lines of diff.** Before committing, size up `git diff main...HEAD` plus any uncommitted changes. If the change is much larger than ~400 lines, or it mixes unrelated work, do not bundle it into one PR:
+- Commit only the files for one coherent change onto a dedicated branch; leave unrelated changes out (uncommitted, or on their own branch).
+- Split a large feature into stacked PRs — each based on the previous, every branch compiling and passing its tests on its own, with no single file carved across PRs.
+- Tell the user how you split it and open each PR against the right base.
+- Proceed as one big PR only when the user explicitly opts in after you flag the size.
+
 1. Run `git status`, `git log main..HEAD --oneline` and `git diff main...HEAD`. If the current branch is `main`, stop and tell the user.
 2. If there are uncommitted changes (staged, unstaged, or untracked), commit them first before opening the PR:
    - Run `git status`, `git diff` (staged + unstaged), and `git log -5 --oneline` in parallel.
